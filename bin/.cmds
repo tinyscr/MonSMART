@@ -1,0 +1,4 @@
+# commands to run
+
+[smartctl]
+smartctl -x /dev/sda

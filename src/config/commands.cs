@@ -1,0 +1,114 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+
+namespace diskwatch.config
+{
+    public struct Command
+    {
+        public string Name;
+        public string Exe;
+        public string Args;
+    }
+
+    static class CommandConfig
+    {
+        static readonly string[] _allowed = { "smartctl" };
+
+        static bool IsAllowedExe(string bare)
+        {
+            foreach (string a in _allowed)
+                if (bare == a) return true;
+            return false;
+        }
+
+        static bool IsSafeArgs(string args)
+        {
+            if (args.Length == 0) return true;
+            return Regex.IsMatch(args, @"^[A-Za-z0-9\s\.\-:,\/]+$");
+        }
+
+        static string MakeSuffix(string args)
+        {
+            // Drive-letter / device extraction is the naming contract the rest of
+            // the pipeline depends on (drive keys "C"/"D", smart label "sda").
+            // The IsSafeName gate at the call site stays as backstop: anything
+            // that still isn't filename-safe is skipped instead of crashing IO.
+            var m = Regex.Match(args, @"\b([A-Za-z]):");
+            if (m.Success) return m.Groups[1].Value.ToUpperInvariant();
+            string[] parts = args.Split(' ');
+            string last = parts[parts.Length - 1];
+            int slash = last.LastIndexOfAny(new char[] { '/', '\\' });
+            return slash >= 0 ? last.Substring(slash + 1) : last;
+        }
+
+        static bool IsSafeName(string s)
+        {
+            return Regex.IsMatch(s, @"^[A-Za-z0-9][A-Za-z0-9._\-]*$");
+        }
+
+        static bool HasMutatingFlag(string exe, string args)
+        {
+            string low = " " + args.ToLowerInvariant() + " ";
+            if (exe == "smartctl")
+            {
+                if (low.Contains(" -t ") || low.Contains(" --test ")) return true;
+                if (low.Contains(" -s ") || low.Contains(" --set ")) return true;
+            }
+            return false;
+        }
+
+        static string ResolveExe(string bare)
+        {
+            if (bare == "smartctl")
+            {
+                string pathVar =
+                    System.Environment.GetEnvironmentVariable("PATH") ?? "";
+                foreach (string rawDir in pathVar.Split(';'))
+                {
+                    string dir = rawDir.Trim();
+                    if (dir.Length == 0) continue;
+                    string candidate = Path.Combine(dir, "smartctl.exe");
+                    if (File.Exists(candidate)) return candidate;
+                }
+            }
+            return null;
+        }
+
+        public static List<Command> Load(string path)
+        {
+            var commands = new List<Command>();
+            string section = null;
+            foreach (string line in Conf.Lines(path))
+            {
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    section = line.Substring(1, line.Length - 2);
+                    continue;
+                }
+                if (section == null || !IsSafeName(section)) continue;
+
+                int sep = line.IndexOf(' ');
+                string exe = sep > 0 ? line.Substring(0, sep) : line;
+                string args = sep > 0 ? line.Substring(sep + 1) : "";
+                if (!IsAllowedExe(exe)) continue;
+                if (!IsSafeArgs(args)) continue;
+                if (HasMutatingFlag(exe, args)) continue;
+
+                string suffix = MakeSuffix(args);
+                if (!IsSafeName(suffix)) continue;
+
+                string resolved = ResolveExe(exe.ToLowerInvariant());
+                if (resolved == null) continue;
+
+                commands.Add(new Command
+                {
+                    Name = section + "_" + suffix,
+                    Exe = resolved,
+                    Args = args
+                });
+            }
+            return commands;
+        }
+    }
+}
