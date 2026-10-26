@@ -1,6 +1,6 @@
 ## Monitor disk health
 
-- **Source:** `diskwatch/src/` (program.cs, commandRunner.cs, config/, models/, parsers/, popup/)
+- **Source:** `MonSMART/src/` (program.cs, commandRunner.cs, config/, models/, parsers/, popup/)
 - **Dependencies:** `smartctl` (smartmontools)
 - **Description:** Read-only SMART monitor that runs smartctl checks, compares results against previous state, and alerts you when something changes. Silent when healthy.
 
@@ -9,7 +9,7 @@
 ### Usage
 
 ```
-diskwatch
+MonSMART
 ```
 
 Runs SMART checks, prints a verdict to the console (still visible if run from a terminal), and shows a dark-themed popup with aligned monospace layout. Intended to be driven by Task Scheduler; the popup is the core output.
@@ -25,7 +25,7 @@ Admin rights are required - full `smartctl` data needs elevation.
 | 2 | Configuration/execution error (no commands configured, no output produced) |
 | 3 | Another instance is already running |
 
-A named mutex (`Global\diskwatch`) prevents concurrent instances - a second launch prints a message and exits with code 3.
+A named mutex (`Global\MonSMART`) prevents concurrent instances - a second launch prints a message and exits with code 3.
 
 ---
 
@@ -37,7 +37,7 @@ A named mutex (`Global\diskwatch`) prevents concurrent instances - a second laun
 |---|---|---|
 | SMART | `smartctl -x /dev/sda` | Drive identity, overall health, endurance, watched attributes |
 
-The exact commands come from `bin/.cmds`. Only `smartctl` is accepted as executable; argument strings are sanitized against shell metacharacters. Mutating flags (e.g. `smartctl -t`) are rejected; diskwatch never repairs, cleans, or modifies the system. The executable is resolved to an absolute path at startup (`smartctl` found via `PATH`). A per-command timeout (`commandTimeoutMinutes` in `.conf`, default 60) kills hung processes and reports them as timed out. Invalid entries are silently skipped.
+The exact commands come from `bin/.cmds`. Only `smartctl` is accepted as executable; argument strings are sanitized against shell metacharacters. Mutating flags (e.g. `smartctl -t`) are rejected; MonSMART never repairs, cleans, or modifies the system. The executable is resolved to an absolute path at startup (`smartctl` found via `PATH`). A per-command timeout (`commandTimeoutMinutes` in `.conf`, default 60) kills hung processes and reports them as timed out. Invalid entries are silently skipped.
 
 SMART attributes to track come from `bin/.smart` in `ID=Name` format. The first 5 are **important** (shown in the popup's Critical Health section, trigger warnings on change); the rest are **extras** (informational only).
 
@@ -135,7 +135,7 @@ commandTimeoutMinutes=60
 ### Source tree
 
 ```
-diskwatch/
+MonSMART/
 ├── src/
 │   ├── program.cs           ← Main(), mutex, command running
 │   ├── commandRunner.cs     ← process launcher
@@ -154,7 +154,7 @@ diskwatch/
 │       ├── window.cs        ← popup dialog (main/extra views)
 │       └── scrollpanel.cs   ← custom slim scrollbar
 ├── bin/
-│   ├── diskwatch.exe       ← compiled binary
+│   ├── MonSMART.exe        ← compiled binary
 │   ├── .cmds                ← commands to run (edit this)
 │   ├── .smart               ← SMART attr IDs and names (edit this)
 │   └── .conf               ← behavior flags

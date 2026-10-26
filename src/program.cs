@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using diskwatch.config;
+using MonSMART.config;
 
 class Program
 {
@@ -18,10 +18,10 @@ class Program
     static int Main(string[] args)
     {
         bool createdNew;
-        _mutex = new Mutex(true, @"Global\diskwatch", out createdNew);
+        _mutex = new Mutex(true, @"Global\MonSMART", out createdNew);
         if (!createdNew)
         {
-            Console.Error.WriteLine("diskwatch is already running.");
+            Console.Error.WriteLine("MonSMART is already running.");
             return 3;
         }
         try

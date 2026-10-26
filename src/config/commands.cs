@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace diskwatch.config
+namespace MonSMART.config
 {
     public struct Command
     {

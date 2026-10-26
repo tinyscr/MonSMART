@@ -25,7 +25,7 @@ class Window
         string resultPath = LatestResultPath();
         if (resultPath == null || !File.Exists(resultPath))
         {
-            Console.Error.WriteLine("No report found. Run diskwatch first.");
+            Console.Error.WriteLine("No report found. Run MonSMART first.");
             return 1;
         }
 
@@ -94,7 +94,7 @@ class Window
         try
         {
             ShowMonospaceDialog(b.ToString(), BuildSmartText(smartState),
-                "  Diskwatch", changesDetected);
+                "  MonSMART", changesDetected);
         }
         catch (Exception ex)
         {

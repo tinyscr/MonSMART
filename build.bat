@@ -9,10 +9,10 @@ if not exist "%CSC%" (
 
 if not exist bin\ md bin
 
-echo Building diskwatch...
-"%CSC%" /nologo /optimize+ /reference:System.Windows.Forms.dll,System.Web.Extensions.dll,System.Drawing.dll /target:winexe /out:bin\diskwatch.exe /recurse:src\*.cs
+echo Building MonSMART...
+"%CSC%" /nologo /optimize+ /reference:System.Windows.Forms.dll,System.Web.Extensions.dll,System.Drawing.dll /target:winexe /out:bin\MonSMART.exe /recurse:src\*.cs
 if %ERRORLEVEL% EQU 0 (
-    echo Build succeeded: bin\diskwatch.exe
+    echo Build succeeded: bin\MonSMART.exe
 ) else (
     echo Build failed.
     exit /b 1
